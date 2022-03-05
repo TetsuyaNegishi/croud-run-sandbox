@@ -25,75 +25,43 @@ router.get(
 );
 
 router.get(
-  '/download/small-file/normal',
+  '/download/small-file',
   (req: express.Request, res: express.Response) => {
+    const {chunked, size} = req.query
 		const path = `${__dirname}/files/small-file.txt`
     const file = fs.createReadStream(path);
     res.setHeader("Content-Type", "application/octet-stream");
     res.setHeader("Content-Disposition", "filename=small-file.txt");
+
+    if(chunked) {
+      res.setHeader("Transfer-Encoding", "chunked");
+    }
+
+    if(size) {
+      const stat = fs.statSync(path);
+      res.setHeader("Content-Length", stat.size)
+    }
     file.pipe(res);
   }
 );
 
 router.get(
-  '/download/small-file/chunked',
+  '/download/large-file',
   (req: express.Request, res: express.Response) => {
-		const path = `${__dirname}/files/small-file.txt`
-    const file = fs.createReadStream(path);
-    res.setHeader("Content-Type", "application/octet-stream");
-    res.setHeader("Content-Disposition", "filename=small-file.txt");
-    res.setHeader("Transfer-Encoding", "chunked");
-    file.pipe(res);
-  }
-);
-
-router.get(
-  '/download/small-file/size-and-chunked',
-  (req: express.Request, res: express.Response) => {
-		const path = `${__dirname}/files/small-file.txt`
-    const file = fs.createReadStream(path);
-    const stat = fs.statSync(path);
-    res.setHeader("Content-Length", stat.size);
-    res.setHeader("Content-Type", "application/octet-stream");
-    res.setHeader("Content-Disposition", "filename=small-file.txt");
-    res.setHeader("Transfer-Encoding", "chunked");
-    file.pipe(res);
-  }
-);
-
-router.get(
-  '/download/large-file/normal',
-  (req: express.Request, res: express.Response) => {
+    const {chunked, size} = req.query
 		const path = `${__dirname}/files/large-file.txt`
     const file = fs.createReadStream(path);
     res.setHeader("Content-Type", "application/octet-stream");
     res.setHeader("Content-Disposition", "filename=large-file.txt");
-    file.pipe(res);
-  }
-);
 
-router.get(
-  '/download/large-file/chunked',
-  (req: express.Request, res: express.Response) => {
-		const path = `${__dirname}/files/large-file.txt`
-    const file = fs.createReadStream(path);
-    res.setHeader("Content-Type", "application/octet-stream");
-    res.setHeader("Content-Disposition", "filename=large-file.txt");
-    res.setHeader("Transfer-Encoding", "chunked");
-    file.pipe(res);
-  }
-);
+    if(chunked) {
+      res.setHeader("Transfer-Encoding", "chunked");
+    }
 
-router.get(
-  '/download/large-file/size-and-chunked',
-  (req: express.Request, res: express.Response) => {
-		const path = `${__dirname}/files/large-file.txt`
-    const file = fs.createReadStream(path);
-    const stat = fs.statSync(path);
-    res.setHeader("Content-Length", stat.size);
-    res.setHeader("Content-Type", "application/octet-stream");
-    res.setHeader("Content-Disposition", "filename=large-file.txt");
-    res.setHeader("Transfer-Encoding", "chunked");
+    if(size) {
+      const stat = fs.statSync(path);
+      res.setHeader("Content-Length", stat.size)
+    }
     file.pipe(res);
   }
 );
