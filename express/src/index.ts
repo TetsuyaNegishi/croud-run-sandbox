@@ -24,47 +24,41 @@ router.get(
   }
 );
 
+const createFileMiddleware = (fileName: string) => async (req: express.Request, res: express.Response) => {
+  const {chunked, size, stream = 'true'} = req.query
+  const path = `${__dirname}/files/${fileName}`
+  res.setHeader("Content-Type", "application/octet-stream");
+  res.setHeader("Content-Disposition", `filename=${fileName}`);
+
+  if(chunked) {
+    res.setHeader("Transfer-Encoding", "chunked");
+  }
+
+  if(size) {
+    const stat = fs.statSync(path);
+    res.setHeader("Content-Length", stat.size)
+  }
+
+  if(stream === 'true') {
+    const file = fs.createReadStream(path);
+    file.pipe(res);
+    return
+  }
+
+  const file = await fs.promises.readFile(path)
+  res.send(file)
+}
+
 router.get(
   '/download/small-file',
-  (req: express.Request, res: express.Response) => {
-    const {chunked, size} = req.query
-		const path = `${__dirname}/files/small-file.txt`
-    const file = fs.createReadStream(path);
-    res.setHeader("Content-Type", "application/octet-stream");
-    res.setHeader("Content-Disposition", "filename=small-file.txt");
-
-    if(chunked) {
-      res.setHeader("Transfer-Encoding", "chunked");
-    }
-
-    if(size) {
-      const stat = fs.statSync(path);
-      res.setHeader("Content-Length", stat.size)
-    }
-    file.pipe(res);
-  }
+  createFileMiddleware('small-file.txt')
 );
 
 router.get(
   '/download/large-file',
-  (req: express.Request, res: express.Response) => {
-    const {chunked, size} = req.query
-		const path = `${__dirname}/files/large-file.txt`
-    const file = fs.createReadStream(path);
-    res.setHeader("Content-Type", "application/octet-stream");
-    res.setHeader("Content-Disposition", "filename=large-file.txt");
-
-    if(chunked) {
-      res.setHeader("Transfer-Encoding", "chunked");
-    }
-
-    if(size) {
-      const stat = fs.statSync(path);
-      res.setHeader("Content-Length", stat.size)
-    }
-    file.pipe(res);
-  }
+  createFileMiddleware('large-file.txt')
 );
+
 
 app.use(router);
 

@@ -1,4 +1,4 @@
-import Fastify from 'fastify'
+import Fastify, { RouteHandlerMethod } from 'fastify'
 import fs from "fs";
 
 const fastifyOption =
@@ -19,59 +19,39 @@ fastify.get('/echo', async (request, reply) => {
 
 type QuerystringType = {
 	chunked: boolean,
-	size: boolean
+	size: boolean,
+	stream: string
 }
 
-fastify.get<{Querystring: QuerystringType}>('/download/small-file', async (request, reply) => {
-	const {chunked, size} = request.query
-	const path = `${__dirname}/files/small-file.txt`
-	const file = fs.createReadStream(path);
-	reply.headers({
-		"Content-Type": "application/octet-stream",
-		"Content-Disposition": "filename=small-file.txt"
-	})
+const createFileMiddleware: (fileName:string) => RouteHandlerMethod = (fileName: string) => async (request, reply) => {
+  const {chunked, size, stream = 'true'} = request.query as QuerystringType
+  const path = `${__dirname}/files/${fileName}`
+  reply.header("Content-Type", "application/octet-stream");
+  reply.header("Content-Disposition", `filename=${fileName}`);
 
-	if(chunked) {
-		reply.headers({
-			"Transfer-Encoding": "chunked"
-		})
-	}
+  if(chunked) {
+    reply.header("Transfer-Encoding", "chunked");
+  }
 
-	if(size) {
-		const stat = fs.statSync(path);
-		reply.headers({
-			"Content-Length": stat.size,
-		})
-	}
+  if(size) {
+    const stat = fs.statSync(path);
+    reply.header("Content-Length", stat.size)
+  }
 
-	reply.send(file)
-})
+  if(stream === 'true') {
+    const file = fs.createReadStream(path);
+    reply.send(file)
+    return
+  }
 
-fastify.get<{Querystring: QuerystringType}>('/download/large-file', async (request, reply) => {
-	console.log(request.query)
-	const {chunked, size} = request.query
-	const path = `${__dirname}/files/large-file.txt`
-	const file = fs.createReadStream(path);
-	reply.headers({
-		"Content-Type": "application/octet-stream",
-		"Content-Disposition": "filename=large-file.txt"
-	})
+  const file = await fs.promises.readFile(path)
+  reply.send(file)
+}
 
-	if(chunked) {
-		reply.headers({
-			"Transfer-Encoding": "chunked"
-		})
-	}
 
-	if(size) {
-		const stat = fs.statSync(path);
-		reply.headers({
-			"Content-Length": stat.size,
-		})
-	}
+fastify.get('/download/small-file', createFileMiddleware('small-file.txt'))
 
-	reply.send(file)
-})
+fastify.get('/download/large-file', createFileMiddleware('large-file.txt'))
 
 const port = process.env.PORT || 8080;
 
