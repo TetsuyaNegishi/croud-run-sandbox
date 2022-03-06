@@ -9,7 +9,8 @@ jobs:
     docker:
       - image: 'cimg/base:stable'
     steps:
-      - checkout:  ~/express-work
+      - checkout:
+          path: ~/express-work
       - node/install:
           install-yarn: true
           node-version: '16.13'
