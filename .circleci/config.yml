@@ -3,21 +3,36 @@ version: 2.1
 orbs:
   node: circleci/node@5.0.0
 
-jobs:
-  express-job:
-    working_directory: ~/express-work/express
+executors:
+  basic-executor:
     docker:
       - image: 'cimg/base:stable'
+
+commands:
+  stop-if-no-change-directory:
+    description: 'ディレクトリに変更がなければ停止する'
+    parameters:
+      directory:
+        type: string
+      branch:
+        type: string
+        default: "origin/main"
+    steps:
+      - run:
+          command: |
+            if ! ../.circleci/is_changed_directories.sh << parameters.directory >> << parameters.branch >> ; then
+              circleci step halt
+            fi
+
+jobs:
+  express-job:
+    executor: basic-executor
+    working_directory: ~/express-work/express
     steps:
       - checkout:
           path: ~/express-work
-      - run:
-          name: 'if change express'
-          command: |
-            if ! ../.circleci/is_changed_directories.sh express "origin/main" ; then
-              echo "express に変更がありません"
-              circleci step halt
-            fi
+      - stop-if-no-change-directory:
+          directory: "express"
       - node/install:
           install-yarn: true
           node-version: '16.13'
@@ -25,19 +40,13 @@ jobs:
       - run: yarn install
       - run: yarn test
   fastify-job:
+    executor: basic-executor
     working_directory: ~/express-work/fastify
-    docker:
-      - image: 'cimg/base:stable'
     steps:
       - checkout:
           path: ~/express-work
-      - run:
-          name: 'if change fastify'
-          command: |
-            if ! ../.circleci/is_changed_directories.sh fastify "origin/main" ; then
-              echo "fastify に変更がありません"
-              circleci step halt
-            fi
+      - stop-if-no-change-directory:
+          directory: "fastify"
       - node/install:
           install-yarn: true
           node-version: '16.13'
