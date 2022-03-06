@@ -14,7 +14,7 @@ jobs:
       - run:
           name: 'if change express'
           command: |
-            if ! is_changed_directory.sh express main ; then
+            if ! ../.circleci/is_changed_directories.sh express "origin/main" ; then
               echo "express に変更がありません"
               circleci step halt
             fi
@@ -34,7 +34,7 @@ jobs:
       - run:
           name: 'if change fastify'
           command: |
-            if ! is_changed_directory.sh fastify main ; then
+            if ! ../.circleci/is_changed_directories.sh fastify "origin/main" ; then
               echo "fastify に変更がありません"
               circleci step halt
             fi
