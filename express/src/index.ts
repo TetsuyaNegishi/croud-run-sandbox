@@ -20,7 +20,6 @@ const router: express.Router = express.Router();
 router.get(
   '/echo',
   (req: express.Request, res: express.Response) => {
-    console.log('test')
 		res.json({echo: 'hoge', testScret: process.env.TEST_SECRET})
   }
 );
