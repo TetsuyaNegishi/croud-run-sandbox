@@ -1,0 +1,38 @@
+version: 2.1
+
+orbs:
+  node: circleci/node@5.0.0
+
+jobs:
+  express-job:
+    working_directory: ~/express-work/express
+    docker:
+      - image: 'cimg/base:stable'
+    steps:
+      - checkout:
+          path: ~/express-work
+      - node/install:
+          install-yarn: true
+          node-version: '16.13'
+      - run: node --version
+      - run: yarn install
+      - run: yarn test
+  fastify-job:
+    working_directory: ~/express-work/fastify
+    docker:
+      - image: 'cimg/base:stable'
+    steps:
+      - checkout:
+          path: ~/express-work
+      - node/install:
+          install-yarn: true
+          node-version: '16.13'
+      - run: node --version
+      - run: yarn install
+      - run: yarn test
+
+workflows:
+  test:
+    jobs:
+      - express-job
+      - fastify-job
