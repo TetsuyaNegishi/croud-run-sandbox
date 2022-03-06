@@ -13,6 +13,7 @@ console.log(fastifyOption)
 const fastify = Fastify(fastifyOption)
 
 fastify.get('/echo', async (request, reply) => {
+	console.log('diff')
   reply.type('application/json').code(200)
   return {echo: 'hoge'}
 })
